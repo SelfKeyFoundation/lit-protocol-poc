@@ -3,23 +3,23 @@
     "dev": "next dev"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.17.0",
-    "@ceramicnetwork/http-client": "^2.21.0",
-    "@ceramicnetwork/stream-tile": "^2.20.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.19.0",
+    "@ceramicnetwork/http-client": "^2.23.0",
+    "@ceramicnetwork/stream-tile": "^2.22.0",
     "@composedb/client": "^0.4.4",
-    "@didtools/pkh-ethereum": "^0.3.0",
-    "@lit-protocol/lit-node-client": "^2.1.55",
+    "@didtools/pkh-ethereum": "^0.4.0",
+    "@lit-protocol/lit-node-client": "^2.2.41",
     "crypto": "^1.0.1",
     "ethers": "^5.7.2",
-    "ipfs-http-client": "^60.0.0",
+    "ipfs-http-client": "^60.0.1",
     "key-did-provider-ed25519": "^3.0.1",
     "key-did-resolver": "^3.0.0",
-    "lit-js-sdk": "^1.1.248",
+    "lit-js-sdk": "^1.1.250",
     "next": "^13.1.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.12.1",
     "wagmi": "^0.12.1",
-    "web3": "^1.10.0"
+    "web3": "^4.0.3"
   }
 }
