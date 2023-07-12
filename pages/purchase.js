@@ -83,7 +83,7 @@ function MarketTable(props) {
         <tbody>
       { props.ids.map((value, i) => {
           return(
-          <tr>
+          <tr key={i}>
             <td>
             {props.names[i]}
             </td>
