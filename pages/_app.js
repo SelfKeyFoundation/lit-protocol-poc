@@ -20,11 +20,12 @@ const client = createClient({
 export default function App({ Component, pageProps }) {
   const [session, setSession] = useState();
   const [dataHash, setDataHash] = useState('0');
+  const [documentEdit, setDocumentEdit] = useState({harrb:'dummy'});
 
   return (
     <WagmiConfig client={client}>
-      <AppContext.Provider value={{ 
-        session: session, 
+      <AppContext.Provider value={{
+        session: session,
         setSession: setSession,
         dataHash: dataHash,
         setDataHash: setDataHash

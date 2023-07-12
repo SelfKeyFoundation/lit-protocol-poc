@@ -1,22 +1,127 @@
 import AppContext from "../components/AppContext";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import lit from "../lib/lit";
+import { tokenABI, paymentsABI } from "../lib/abis";
+import ceramic from "../lib/ceramic";
+//import ipfs from "../lib/ipfs";
+import { create } from "ipfs-http-client";
+import { useAccount, useConnect, useDisconnect, useBalance, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { InjectedConnector } from 'wagmi/connectors/injected';
 
-import { useAccount, useConnect, useDisconnect, useBalance, useContractWrite, usePrepareContractWrite } from 'wagmi'
-import { InjectedConnector } from 'wagmi/connectors/injected'
- 
+//import makeIpfsFetch from 'ipfs-fetch';
 
-const tokenABI = [{"inputs":[{"internalType":"uint256","name":"initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
-const paymentsABI = [{"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"inputs":[{"internalType":"address","name":"signer","type":"address"}],"name":"addSigner","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes32","name":"dataID","type":"bytes32"},{"internalType":"address","name":"dataOwner","type":"address"}],"name":"getDataHash","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"bytes32","name":"msgHash","type":"bytes32"}],"name":"getSignedMessage","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes32","name":"dataID","type":"bytes32"},{"internalType":"address","name":"dataOwner","type":"address"}],"name":"getSignedMessage2","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes32","name":"dataID","type":"bytes32"},{"internalType":"address","name":"dataOwner","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"getSigner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes32","name":"dataID","type":"bytes32"},{"internalType":"address","name":"dataOwner","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"getSigner2","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"}],"name":"isSigner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes32","name":"dataID","type":"bytes32"},{"internalType":"address","name":"dataOwner","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"makePayment","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"username","type":"address"},{"internalType":"bytes32","name":"dataID","type":"bytes32"}],"name":"paymentWasMade","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"payments","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"dataOwner","type":"address"},{"internalType":"uint256","name":"date","type":"uint256"},{"internalType":"uint256","name":"nonce","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"removeSigner","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"signers","outputs":[{"internalType":"bool","name":"enabled","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"token","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawEarnings","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"withdrawFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawalNonce","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+const directoryStreamID = 'kjzl6cwe1jw149n2kupgcy4c8delsbvcwi5u3gjs8mg2n2ev3nqaect16chqi1y';
+const projectId = '2KXNViL7sQJD1g6Xf6qZjLXodCh';
+const projectSecret = 'a0bc92c8fb761db6c65b8f87e6dfd51a';
+const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
+
+const client = create({
+  host: 'ipfs.infura.io',
+  port: 5001,
+  protocol: 'https',
+  headers: {
+      authorization: auth,
+  },
+});
+
+//const fetch = await makeIpfsFetch({client})
 
 function Header(props) {
   return(<h1>{props.title}</h1>);
 }
+//
+function MarketTable(props) {  
+  const [paymentSignature, setPaymentSignature] = useState("");
+  const context = useContext(AppContext);
+  const router = useRouter(); 
+  
+  async function authorizePayment(price, dataId, dataOwner) {    
+    const authorization = await lit.authorizePayment(price, dataId, dataOwner);
+    const sig = authorization.signatures['sig1'].signature;
+    setPaymentSignature(sig);
+    //approveCall();
+
+    console.log("authorizing signature for data...");
+    console.log("amount: ", price);
+    console.log("data ID: ", "0x" + dataId);
+    console.log("data owner: ", dataOwner);
+    console.log("payment signature: ", sig);
+  }
+
+  async function decryptFile(url, encryptedKey, dataId) {
+    //let data;
+    const fetchResult = await fetch(url);
+    const encryptedData = await fetchResult.blob();
+
+    /*for await (const buf of client.cat(path)) {
+      //data = new TextDecoder().decode(buf);
+      console.log("the data is ", new TextDecoder().decode(buf));
+    }*/
+    console.log("decryptFile...");
+    console.log("URL: ", url);
+    console.log("encryptedKey: ", encryptedKey);
+    console.log("dataId: ", dataId);
+    
+    const decrypted = await lit.decryptFile(encryptedData.toString(), encryptedKey, dataId);
+    console.log("decrypted = ", JSON.stringify(decrypted));
+  }
+  
+  return (
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>URL</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+      { props.ids.map((value, i) => {
+          return(
+          <tr>
+            <td>
+            {props.names[i]}
+            </td>
+            <td>
+            {props.descriptions[i]}
+            </td>
+            <td>
+            {props.prices[i]}
+            </td>
+            <td>
+            {props.urls[i]}
+            </td>
+            <td>
+              <button onClick={() => authorizePayment(props.prices[i], props.dataIds[i], props.dataOwners[i])}>authorize payment</button>
+            </td>
+            <td>
+              <button onClick={() => decryptFile(props.urls[i], props.encryptedKeys[i], props.dataIds[i])}>decrypt file</button>
+            </td>
+          </tr>)
+        }) }
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function PurchasePage() {
   const context = useContext(AppContext);
-
-  const [paymentSignature, setPaymentSignature] = useState("0xb6efe891bf47fb157d15e79b1ab6dcd80966d2f5c57f1d0c93119a8689b5ea853ed8ad7e2b0c7735215ee655f15348b5b55029fa56c1f0dd4d1024246a822fd91c");
+  const [prices, setPrices] = useState([]);
+  const [ids, setIDs] = useState([]);
+  const [names, setNames] = useState([]);
+  const [descriptions, setDescriptions] = useState([]);
+  const [urls, setUrls] = useState([]);
+  const [dataOwners, setDataOwners] = useState([]);
+  const [dataIds, setDataIds] = useState([]);
+  const [IpfsPaths, setIpfsPaths] = useState([]);
+  const [encryptedKeys, setEncryptedKeys] = useState([]);
+  const [refreshState, setRefreshState] = useState("");
 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({
@@ -38,6 +143,31 @@ export default function PurchasePage() {
 
   const { write } = useContractWrite(config);
   const approveCall = write;
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      const did = await ceramic.authenticateCeramic();
+      const directory = await ceramic.loadDocument(directoryStreamID);
+      
+      for(var i = 0; i < directory.content.documents.length; i++) {
+        const id = directory.content.documents[i];
+        const d = await ceramic.loadDocument(id);
+        
+        prices[i] = d.content.price;
+        ids[i] = id;
+        names[i] = d.content.name;
+        descriptions[i] = d.content.description;
+        urls[i] = d.content.url;
+        dataOwners[i] = d.content.dataOwner;
+        dataIds[i] = d.content.dataId;
+        encryptedKeys[i] =  d.content.encryptedKey;
+        IpfsPaths[i] = d.content.IpfsPath;
+      }
+      setRefreshState("done");
+    }
+
+    fetchData().catch(console.error);
+  }, []);
 
   /*const { config: callConfig2 } = usePrepareContractWrite({
     address: '0x85be769afFa3A4324Aa06CAEe830B0A5a8cf6199',
@@ -48,70 +178,18 @@ export default function PurchasePage() {
   });
   const { write: paymentCall } = useContractWrite(callConfig2);*/
   //console.log("callConfig2: ", JSON.stringify(callConfig2));
-  
-  async function authorizePayment(e) {    
-    const authorization = await lit.authorizePayment(
-      context.session.price, 
-      context.dataHash, 
-      context.session.dataOwner);
 
-    const sig = authorization.signatures['sig1'].signature;
-    
-    setPaymentSignature(sig);
-    //approveCall();
-
-    console.log("amount: ", context.session.price);
-    console.log("data ID: ", "0x" + context.dataHash);
-    console.log("data owner: ", context.session.dataOwner);
-    console.log("payment signature: ", sig);
-  }
-
-  async function decryptFile() {
-
-    const decrypted = await lit.decryptFile(
-      context.session.encryptedString, 
-      context.session.encryptedSymmetricKey, 
-      context.dataHash
-    );
-
-    console.log(JSON.stringify(decrypted));
-  }
-
-  if(context.session) {
+  //if(context.session) {
     return (
       <div>
         <div>
           <Header title="Lit Protocol PoC: Purchase view" />
           {isConnected? <div>Connected to {address} <button onClick={() => disconnect()}>Disconnect</button><p>Token balance: {balance.data.formatted} {balance.symbol}</p></div> : <button onClick={() => connect()}>Connect Wallet</button> } 
         </div>
-        <div>
-          <p>Available data for purchase: </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>URL</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{ context.session.name }</td>
-                <td>{ context.session.description }</td>
-                <td>{ context.session.ipfsUrl }</td>
-                <td>
-                  <button onClick={authorizePayment}>authorize payment</button>
-                </td>
-                <td>
-                  <button onClick={decryptFile}>decrypt file</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <MarketTable ids={ids} names={names} descriptions={descriptions} urls={urls} prices={prices} dataOwners={dataOwners} dataIds={dataIds} encryptedKeys={encryptedKeys}></MarketTable>
       </div>
     );
-  } else {
+  /*} else {
     return (
       <div>
         <div>
@@ -122,6 +200,5 @@ export default function PurchasePage() {
         </div>
       </div>
     );
-  }
-  
+  } */
 }
