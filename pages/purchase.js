@@ -9,11 +9,10 @@ import { create } from "ipfs-http-client";
 import { useAccount, useConnect, useDisconnect, useBalance, useContractWrite, usePrepareContractWrite } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 
-//import makeIpfsFetch from 'ipfs-fetch';
-
 const directoryStreamID = 'kjzl6cwe1jw149n2kupgcy4c8delsbvcwi5u3gjs8mg2n2ev3nqaect16chqi1y';
-const projectId = '2KXNViL7sQJD1g6Xf6qZjLXodCh';
-const projectSecret = 'a0bc92c8fb761db6c65b8f87e6dfd51a';
+const projectId = '';
+const projectSecret = '';
+
 const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
 const client = create({
@@ -25,32 +24,35 @@ const client = create({
   },
 });
 
-//const fetch = await makeIpfsFetch({client})
-
 function Header(props) {
   return(<h1>{props.title}</h1>);
 }
 //
 function MarketTable(props) {  
-  const [paymentSignature, setPaymentSignature] = useState("");
+  //const [paymentSignature, setPaymentSignature] = useState("");
   const context = useContext(AppContext);
   const router = useRouter(); 
   
-  async function authorizePayment(price, dataId, dataOwner) {    
-    const authorization = await lit.authorizePayment(price, dataId, dataOwner);
+  async function authorizePayment(price, dataId, dataOwner, streamID) {    
+    const authorization = await lit.authorizePayment(price, dataId, dataOwner, streamID);
     const sig = authorization.signatures['sig1'].signature;
-    setPaymentSignature(sig);
+    //setPaymentSignature(sig);
     //approveCall();
 
     console.log("authorizing signature for data...");
     console.log("amount: ", price);
     console.log("data ID: ", "0x" + dataId);
     console.log("data owner: ", dataOwner);
+    console.log("stream ID: ", streamID);
     console.log("payment signature: ", sig);
   }
 
   async function decryptFile(url, encryptedKey, dataId) {
-    //let data;
+    console.log("decrypting file...");
+    console.log("URL: ", url);
+    console.log("encrypted key: ", encryptedKey);
+    console.log("dataId: ", dataId);
+    
     const fetchResult = await fetch(url);
     const encryptedData = await fetchResult.blob();
 
@@ -58,13 +60,10 @@ function MarketTable(props) {
       //data = new TextDecoder().decode(buf);
       console.log("the data is ", new TextDecoder().decode(buf));
     }*/
-    console.log("decryptFile...");
-    console.log("URL: ", url);
-    console.log("encryptedKey: ", encryptedKey);
-    console.log("dataId: ", dataId);
     
-    const decrypted = await lit.decryptFile(encryptedData.toString(), encryptedKey, dataId);
-    console.log("decrypted = ", JSON.stringify(decrypted));
+    const decrypted = await lit.decryptFile(encryptedData, encryptedKey, dataId); // encryptedData.toString()?
+    console.log("decrypted file!");
+    console.log(JSON.stringify(decrypted)); 
   }
   
   return (
@@ -97,7 +96,7 @@ function MarketTable(props) {
             {props.urls[i]}
             </td>
             <td>
-              <button onClick={() => authorizePayment(props.prices[i], props.dataIds[i], props.dataOwners[i])}>authorize payment</button>
+              <button onClick={() => authorizePayment(props.prices[i], props.dataIds[i], props.dataOwners[i], props.ids[i])}>authorize payment</button>
             </td>
             <td>
               <button onClick={() => decryptFile(props.urls[i], props.encryptedKeys[i], props.dataIds[i])}>decrypt file</button>
@@ -179,7 +178,6 @@ export default function PurchasePage() {
   const { write: paymentCall } = useContractWrite(callConfig2);*/
   //console.log("callConfig2: ", JSON.stringify(callConfig2));
 
-  //if(context.session) {
     return (
       <div>
         <div>
@@ -189,16 +187,4 @@ export default function PurchasePage() {
         <MarketTable ids={ids} names={names} descriptions={descriptions} urls={urls} prices={prices} dataOwners={dataOwners} dataIds={dataIds} encryptedKeys={encryptedKeys}></MarketTable>
       </div>
     );
-  /*} else {
-    return (
-      <div>
-        <div>
-          <Header title="Lit Protocol PoC: Purchase view" />
-        </div>
-        <div>
-          There's no data in the market available for purchase
-        </div>
-      </div>
-    );
-  } */
 }

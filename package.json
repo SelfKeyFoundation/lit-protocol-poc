@@ -4,12 +4,14 @@
   },
   "dependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.19.0",
-    "@ceramicnetwork/http-client": "^2.23.0",
-    "@ceramicnetwork/stream-tile": "^2.22.0",
+    "@ceramicnetwork/http-client": "^2.26.0",
+    "@ceramicnetwork/stream-tile": "^2.25.0",
     "@composedb/client": "^0.4.4",
     "@didtools/pkh-ethereum": "^0.4.0",
     "@lit-protocol/lit-node-client": "^2.2.41",
     "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "esbuild": "0.18.11",
     "ethers": "^5.7.2",
     "ipfs-http-client": "^60.0.1",
     "key-did-provider-ed25519": "^3.0.1",
@@ -20,6 +22,20 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.12.1",
     "wagmi": "^0.12.1",
-    "web3": "^4.0.3"
+    "web3": "^4.0.3",
+    "xhr2": "^0.2.1",
+    "xmlhttprequest": "^1.8.0"
+  },
+  "type": "module",
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
+  },
+  "devDependencies": {
+    "child_process": "^1.0.2",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "url": "^0.11.1"
   }
 }

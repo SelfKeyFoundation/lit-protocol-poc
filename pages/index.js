@@ -6,13 +6,14 @@ import lit from "../lib/lit";
 import ceramic from "../lib/ceramic";
 //import ipfsModule from "../lib/ipfs";
 import { create } from "ipfs-http-client";
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 
-const dataOwner = '0xc4b57BB0d322F06f20669f3aE09028464942d8FB';  // SHOULD BE RETRIEVED APPROPRIATELY
+const projectId = '';
+const projectSecret = '';
 const directoryStreamID = 'kjzl6cwe1jw149n2kupgcy4c8delsbvcwi5u3gjs8mg2n2ev3nqaect16chqi1y';
 
-const projectId = '2KXNViL7sQJD1g6Xf6qZjLXodCh';
-const projectSecret = 'a0bc92c8fb761db6c65b8f87e6dfd51a';
 const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
 const client = create({
@@ -23,6 +24,7 @@ const client = create({
       authorization: auth,
   },
 });
+
 
 function Header(props) {
   return(<h1>{props.title}</h1>);
@@ -66,6 +68,7 @@ function MarketTable(props) {
   function refresh() {
     console.log("MarketTable refresh");
     setRefreshState(refreshState + 1);
+    // empty arrays?
   }
 
   return (
@@ -115,9 +118,6 @@ function MarketTable(props) {
 
 export default function HomePage() {
   const [file, setFile] = useState(null);
-  //const [encryptedStringArr, setEncryptedStringArr] = useState([]);
-  //const [encryptedDataArr, setEncryptedDataArr] = useState([]);
-  //const [encryptedKeyArr, setEncryptedKeyArr] = useState([]);
   const [decryptedFileArr, setDecryptedFileArr] = useState([]);
   const [dataHash, setDataHash] = useState([]);
   const [url, setURL] = useState('');
@@ -136,6 +136,7 @@ export default function HomePage() {
 
   const context = useContext(AppContext);
   const router = useRouter();
+
 
   //let prices = []; 
 
@@ -157,7 +158,8 @@ export default function HomePage() {
         dataIds[i] = d.content.dataId;
         encryptedKeys[i] = d.content.encryptedKey;
       }
-      setRefreshState("done");
+      
+      setRefreshState("done");  // check if necessary
     }
 
     fetchData().catch(console.error);
@@ -174,29 +176,49 @@ export default function HomePage() {
     
     e.preventDefault();
   }
-
+  
+  async function executeLitAction(code) {
+    // function for testing lit actions
+    const streamID = 'kjzl6cwe1jw14a3f5ajbkb6s28w52shytb0u57k9z8wsnbcr3js5b31ksv8ab00';
+    const price = '30000'
+    const dataId = 'ca58b5dd05aa0edb0790d0aa14d4104dc06ca182280598f8e17483a37839dc15';
+    const dataOwner = '0xc4b57bb0d322f06f20669f3ae09028464942d8fb'; 
+    
+    return await lit.authorizePayment2(price, dataId, dataOwner, streamID, code);
+  }
+  
   async function handleSubmit(e) {
     e.preventDefault();
 
     try {
       const f = file.toString();
+      
+      /*const authorization = await executeLitAction(f);
+      const sig = authorization.signatures['sig1'].signature;
+      console.log("logs: ", authorization.logs)
+      console.log("got signature! --> ", sig);
+      return;*/ // <-- code block to directly test lit action code
+      
       const hash_ = createHash("sha256").update(f).digest("hex"); 
       const encrypted = await lit.encryptFile(f, hash_);
       const created = await client.add(encrypted.encryptedString);
-      
-      //const created = await client.add(f);
+          
+      //const created = await client.add(f); // <-- provisionally used to upload lit actions to IPFS directly
       
       const ipfsUrl = `https://ipfs.io/ipfs/${created.path}`;
 
       //const ipfsUrl = 'Not uploaded';
       setURL(ipfsUrl);
+      
+      // return; 
+      // lit.litNodeClient.getWalletSig() // get authSig address
 
       const content = {
         dataId: hash_,
         name: e.target.dataName.value,
         description: e.target.dataDescription.value,
         price: e.target.dataPrice.value,
-        dataOwner: dataOwner,
+        dataOwner: encrypted.litAuth.address,
         url: ipfsUrl,
         IpfsPath: created.path,
         encryptedKey: encrypted.encryptedSymmetricKey,
@@ -204,22 +226,9 @@ export default function HomePage() {
 
       const doc = await ceramic.createDocument(content);
       await ceramic.appendToDocument(directoryStreamID, doc.id.toString());
-
-      //console.log("el doc nuevo: ", doc.id.toString());
-      //console.log(doc.toString());
-
-      /*context.setSession({
-        name: e.target.dataName.value,
-        description: e.target.dataDescription.value,
-        ipfsUrl: ipfsUrl,
-        price: e.target.dataPrice.value,
-        dataOwner: dataOwner,
-        //encryptedString: encrypted.encryptedString,
-        //encryptedData: encrypted.encryptedData,
-        //encryptedSymmetricKey: encrypted.encryptedSymmetricKey
-      });*/
-
-      /*context.setDataHash(hash_);*/
+      
+      refresh();
+      
     } catch (error) {
       console.log(error.message);
     }
@@ -245,15 +254,15 @@ export default function HomePage() {
             </tr>
             <tr>
               <td><label>Name: </label></td>
-              <td><input id="dataName" type="text" required /></td>
+              <td><input id="dataName" type="text" /></td>
             </tr>
             <tr>
               <td><label>Description: </label></td>
-              <td><input id="dataDescription" type="text" required /></td>
+              <td><input id="dataDescription" type="text" /></td>
             </tr>
             <tr>
               <td><label>Price (MCK): </label></td>
-              <td><input id="dataPrice" type="text" required /></td>
+              <td><input id="dataPrice" type="text" /></td>
             </tr>
             <tr>
               <td><button type="submit" className="button">Submit</button></td>
