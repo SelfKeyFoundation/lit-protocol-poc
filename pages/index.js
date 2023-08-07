@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { createHash } from "crypto";
 import lit from "../lib/lit";
 import ceramic from "../lib/ceramic";
-//import ipfsModule from "../lib/ipfs";
 import { create } from "ipfs-http-client";
 import * as dotenv from 'dotenv';
 

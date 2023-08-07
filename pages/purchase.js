@@ -2,9 +2,8 @@ import AppContext from "../components/AppContext";
 import { useContext, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import lit from "../lib/lit";
-import { tokenABI, paymentsABI } from "../lib/abis";
+//import { tokenABI, paymentsABI } from "../lib/abis";
 import ceramic from "../lib/ceramic";
-//import ipfs from "../lib/ipfs";
 import { create } from "ipfs-http-client";
 import { useAccount, useConnect, useDisconnect, useBalance, useContractWrite, usePrepareContractWrite } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
@@ -133,12 +132,12 @@ export default function PurchasePage() {
     token: '0x58215371F0336e8b25363f2ac521712c3213047D',
   });
 
-  const { config } = usePrepareContractWrite({
+  /*const { config } = usePrepareContractWrite({
     address: '0x58215371F0336e8b25363f2ac521712c3213047D',
     abi: tokenABI,
     functionName: 'approve',
     args: ['0x85be769afFa3A4324Aa06CAEe830B0A5a8cf6199', '50000']  // amount shouldn't be hardcoded
-  });
+  });*/
 
   const { write } = useContractWrite(config);
   const approveCall = write;
